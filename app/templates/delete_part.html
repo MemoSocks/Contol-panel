@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Подтверждение удаления{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Подтверждение удаления</h1>
+</div>
+<div class="container">
+    <div class="card" style="max-width: 600px; margin: 2rem auto;">
+        <h2>Вы уверены?</h2>
+        <p>Это действие приведет к полному удалению детали <strong>{{ part_id }}</strong> и всей ее истории операций.</p>
+        <p><strong>Это действие необратимо.</strong></p>
+        <form method='post' action="{{ url_for('admin.delete_part', part_id=part_id) }}">
+            <button type='submit' class='button delete'>Да, я уверен, удалить</button>
+            <a href="{{ url_for('main.dashboard') }}" class="button">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

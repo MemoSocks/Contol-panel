@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить пользователя{% endblock %}
+
+{% block content %}
+<div class="header"><h1>Добавить нового пользователя</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('admin.list_users') }}">← Назад к списку</a></p>
+    <div class="card" style="max-width: 600px; margin: 2rem auto;">
+        <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+
+            {{ form.username.label }}
+            {{ form.username() }}
+            {% for error in form.username.errors %}<small style="color: red;">{{ error }}</small>{% endfor %}
+            
+            {{ form.password.label }}
+            {{ form.password() }}
+            {% for error in form.password.errors %}<small style="color: red;">{{ error }}</small>{% endfor %}
+            
+            {{ form.role.label }}
+            {{ form.role() }}
+            {% for error in form.role.errors %}<small style="color: red;">{{ error }}</small>{% endfor %}
+
+            <fieldset style="margin-top: 1rem; border: 1px solid #ccc; padding: 1rem; border-radius: 4px;">
+                <legend>Права доступа:</legend>
+                <div>{{ form.can_add_parts() }} {{ form.can_add_parts.label(style="display:inline;") }}</div>
+                <div>{{ form.can_edit_parts() }} {{ form.can_edit_parts.label(style="display:inline;") }}</div>
+                <div>{{ form.can_delete_parts() }} {{ form.can_delete_parts.label(style="display:inline;") }}</div>
+                <div>{{ form.can_generate_qr() }} {{ form.can_generate_qr.label(style="display:inline;") }}</div>
+                <hr style="margin: 0.5rem 0;">
+                <div>{{ form.can_view_audit_log() }} {{ form.can_view_audit_log.label(style="display:inline;") }}</div>
+                <div>{{ form.can_view_reports() }} {{ form.can_view_reports.label(style="display:inline;") }}</div>
+                <div>{{ form.can_manage_stages() }} {{ form.can_manage_stages.label(style="display:inline;") }}</div>
+                <div>{{ form.can_manage_routes() }} {{ form.can_manage_routes.label(style="display:inline;") }}</div>
+                <hr style="margin: 0.5rem 0;">
+                <div>{{ form.can_manage_users() }} {{ form.can_manage_users.label(style="display:inline; color: #dc3545;") }}</div>
+            </fieldset>
+            
+            {{ form.submit(class="button confirm full-width", style="margin-top: 1.5rem;") }}
+        </form>
+    </div>
+</div>
+{% endblock %}

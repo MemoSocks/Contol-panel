@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="header"><h1>{{ title }}</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('admin.list_routes') }}">← Назад к списку маршрутов</a></p>
+    <div class="card">
+        <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+            
+            <!-- Поле для названия маршрута -->
+            {{ form.name.label }}
+            {{ form.name() }}
+            {% for error in form.name.errors %}<small style="color: red;">{{ error }}</small>{% endfor %}
+
+            <!-- Чекбокс "Использовать по умолчанию" -->
+            <div style="margin: 1rem 0;">
+                {{ form.is_default() }}
+                {{ form.is_default.label(style="display:inline;") }}
+            </div>
+            
+            <hr>
+            
+            <h4>Этапы маршрута (перетащите, чтобы изменить порядок)</h4>
+            
+            <!-- Вывод ошибок валидации для списка этапов -->
+            {% if form.stages.errors %}
+                <div style="color: red; font-weight: bold; margin-bottom: 1rem;">
+                    {% for error in form.stages.errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Этот скрытый блок будет нашим шаблоном для новой строки -->
+            <template id="stage-template">
+                <div class="stage-entry" style="display: flex; align-items: center; margin-bottom: 0.5rem; background: #f8f9fa; padding: 0.5rem; border-radius: 4px;">
+                    <span class="drag-handle" style="cursor: move; margin-right: 1rem;">☰</span>
+                    <!-- Имя 'stages' одинаковое для всех, чтобы форма получила список -->
+                    <select name="stages" style="flex-grow: 1;"></select>
+                    <button type="button" class="button delete remove-stage" style="padding: 0.2rem 0.6rem; font-size: 1rem;">-</button>
+                </div>
+            </template>
+
+            <div id="stages-container">
+                <!-- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ: -->
+                <!-- Мы добавляем проверку 'if form.stages.data' -->
+                <!-- Этот цикл теперь будет выполняться только при РЕДАКТИРОВАНИИ, -->
+                <!-- когда в form.stages.data уже есть какие-то ID. -->
+                {% if form.stages.data %}
+                    {% for stage_id in form.stages.data %}
+                        <div class="stage-entry" style="display: flex; align-items: center; margin-bottom: 0.5rem; background: #f8f9fa; padding: 0.5rem; border-radius: 4px;">
+                            <span class="drag-handle" style="cursor: move; margin-right: 1rem;">☰</span>
+                            <select name="stages" style="flex-grow: 1;">
+                                {% for choice_id, choice_name in form.stages.choices %}
+                                    <option value="{{ choice_id }}" {% if choice_id == stage_id %}selected{% endif %}>{{ choice_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="button delete remove-stage" style="padding: 0.2rem 0.6rem; font-size: 1rem;">-</button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <button type="button" id="add-stage" class="button" style="margin-top: 1rem;">+ Добавить этап</button>
+            <hr style="margin: 1.5rem 0;">
+            
+            {{ form.submit(class="button confirm full-width") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('stages-container');
+    const addButton = document.getElementById('add-stage');
+    const template = document.getElementById('stage-template');
+    const allStageChoices = {{ form.stages.choices|tojson }};
+
+    new Sortable(container, { animation: 150, handle: '.drag-handle' });
+
+    function addStageRow() {
+        if (allStageChoices.length === 0) {
+            alert('Справочник этапов пуст! Сначала добавьте этапы.'); return;
+        }
+        const clone = template.content.cloneNode(true);
+        const select = clone.querySelector('select');
+        allStageChoices.forEach(choice => {
+            const option = new Option(choice[1], choice[0]);
+            select.add(option);
+        });
+        container.appendChild(clone);
+    }
+
+    // Если при открытии страницы нет ни одного этапа (случай создания),
+    // то мы автоматически добавляем одну пустую строку.
+    if (container.children.length === 0) {
+        addStageRow();
+    }
+    
+    addButton.addEventListener('click', addStageRow);
+
+    container.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-stage')) {
+            if (container.children.length > 1) {
+                e.target.closest('.stage-entry').remove();
+            } else {
+                alert('В маршруте должен быть хотя бы один этап.');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Отчеты{% endblock %}
+{% block content %}
+<div class="header"><h1>Отчеты и аналитика</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('admin.admin_page') }}">← Назад в админ-панель</a></p>
+
+    <div class="card">
+        <h2>Производительность операторов</h2>
+        <p>Отчет показывает, сколько производственных этапов было закрыто каждым оператором за выбранный период времени.</p>
+        <a href="{{ url_for('admin.report_operator_performance') }}" class="button">Перейти к отчету</a>
+    </div>
+
+    <div class="card">
+        <h2>Среднее время выполнения этапов</h2>
+        <p>Отчет анализирует, сколько времени в среднем проходит между завершением предыдущего этапа и текущего. Помогает выявить "узкие места" в производстве.</p>
+        <a href="{{ url_for('admin.report_stage_duration') }}" class="button">Перейти к отчету</a>
+    </div>
+</div>
+{% endblock %}

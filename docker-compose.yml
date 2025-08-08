@@ -1,0 +1,25 @@
+services:
+  web:
+    build: .
+    container_name: product_tracker_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    
+    # ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ:
+    # Мы возвращаем полную и правильную последовательность команд
+    # для инициализации и обновления базы данных.
+    command: >
+      sh -c "echo '==> 1. Initializing migrations folder (if needed)...' &&
+             flask db init || true &&
+             echo '==> 2. Generating migration script (if needed)...' &&
+             flask db migrate -m 'Auto-migration on startup' || true &&
+             echo '==> 3. Applying migrations to database...' &&
+             flask db upgrade &&
+             echo '==> 4. Seeding initial data...' &&
+             python database_setup.py &&
+             echo '==> 5. Starting application server...' &&
+             python run.py"

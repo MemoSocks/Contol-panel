@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Управление маршрутами{% endblock %}
+{% block content %}
+<div class="header"><h1>Управление технологическими маршрутами</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('admin.admin_page') }}">← Назад в админ-панель</a></p>
+    <div class="card">
+        <a href="{{ url_for('admin.add_route') }}" class="button confirm">Создать новый маршрут</a>
+    </div>
+    {% if routes %}
+    <table>
+        <thead>
+            <tr>
+                <th>Название маршрута</th>
+                <th>Этапы</th>
+                <th>По умолчанию</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for route in routes %}
+            <tr>
+                <td><strong>{{ route.name }}</strong></td>
+                <td>
+                    <ol style="margin: 0; padding-left: 1.5em;">
+                        {% for stage in route.stages.order_by('order') %}
+                            <!-- 
+                                ИСПРАВЛЕНИЕ:
+                                Был неверный атрибут 'stage.stage_name'.
+                                Правильный путь к имени этапа: 'stage.stage.name'.
+                                Мы обращаемся к объекту Stage через связь 'stage'
+                                и уже у него берем поле 'name'.
+                            -->
+                            <li>{{ stage.stage.name }}</li>
+                        {% endfor %}
+                    </ol>
+                </td>
+                <td>{% if route.is_default %}✔{% endif %}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_route', route_id=route.id) }}" class="edit-link" title="Редактировать">✎</a>
+                    <form action="{{ url_for('admin.delete_route', route_id=route.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите удалить этот маршрут?');">
+                        <button type="submit" class="delete-link" title="Удалить" style="border:none; background:none; cursor:pointer;">✖</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card" style="text-align: center;">
+        <p>Технологические маршруты еще не созданы.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

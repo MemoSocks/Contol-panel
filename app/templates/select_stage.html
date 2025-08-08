@@ -1,0 +1,27 @@
+<!-- file: app/templates/select_stage.html -->
+{% extends "base.html" %}
+{% block title %}Выбор этапа для {{ part.part_id }}{% endblock %}
+{% block content %}
+<div class="header">
+    <h1>Деталь: {{ part.part_id }}</h1>
+    <h2 style="font-weight: normal; color: #ddd; font-size: 1.1rem; margin:0;">Маршрут: {{ part.route_template.name }}</h2>
+</div>
+<div class="container form-container">
+    <div class="card">
+        <h2>Выберите выполненный этап:</h2>
+        {% if available_stages %}
+            {% for stage in available_stages %}
+                <form action="{{ url_for('main.confirm_stage', part_id=part.part_id, stage_name=stage) }}" method="post" style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1.5rem;">
+                    <h4>{{ stage }}</h4>
+                    <label for="operator_name_{{loop.index}}">Ваше ФИО:</label>
+                    <input type="text" id="operator_name_{{loop.index}}" name="operator_name" required>
+                    <button type="submit" class="button confirm full-width">Подтвердить</button>
+                </form>
+            {% endfor %}
+        {% else %}
+            <p style='font-size: 1.2rem; text-align: center;'>✅ Все этапы для этой детали уже завершены.</p>
+            <a href="{{ url_for('main.dashboard') }}" class="button">На главную</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

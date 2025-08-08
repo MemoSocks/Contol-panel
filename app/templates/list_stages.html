@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Справочник этапов{% endblock %}
+{% block content %}
+<div class="header"><h1>Справочник производственных этапов</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('admin.admin_page') }}">← Назад в админ-панель</a></p>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+        <div>
+            <div class="card">
+                <h4>Существующие этапы</h4>
+                {% if stages %}
+                <ul>
+                    {% for stage in stages %}
+                    <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        {{ stage.name }}
+                        <form action="{{ url_for('admin.delete_stage', stage_id=stage.id) }}" method="post" onsubmit="return confirm('Вы уверены?');">
+                            <button type="submit" class="button delete" style="padding: 0.1rem 0.5rem; font-size: 0.8rem;">Удалить</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p>Справочник пуст.</p>{% endif %}
+            </div>
+        </div>
+        <div>
+            <div class="card">
+                <h4>Добавить новый этап</h4>
+                <form method="post" action="{{ url_for('admin.add_stage') }}" novalidate>
+                    {{ form.hidden_tag() }}
+                    {{ form.name.label }}
+                    {{ form.name() }}
+                    {{ form.submit(class="button confirm full-width") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

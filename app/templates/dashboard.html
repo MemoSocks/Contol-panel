@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Панель мониторинга{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Панель мониторинга</h1>
+</div>
+
+<div class="container">
+    <div class="user-bar">
+        {% if current_user.is_authenticated %}
+            <span class="user-greeting">
+                Вы вошли как: <strong>{{ current_user.username }}</strong> ({{ current_user.role }})
+            </span>
+            <div>
+                {% if current_user.is_admin() or current_user.can_view_audit_log or current_user.can_add_parts or current_user.can_manage_stages or current_user.can_manage_routes %}
+                    <a href="{{ url_for('admin.admin_page') }}" class='button'>⚙ Админ</a> 
+                {% endif %}
+                <a href="{{ url_for('admin.logout') }}" class='button'>Выйти</a>
+            </div>
+        {% else %}
+            <a href="{{ url_for('admin.login') }}" class='button'>Войти</a>
+        {% endif %}
+    </div>
+
+    <div class="card" style="margin-bottom: 1rem; padding: 0.5rem;">
+        <input type="text" id="searchInput" placeholder=" Поиск по названию изделия..." style="width: 100%; margin: 0; padding: 0.75rem; font-size: 1rem; border: none;">
+    </div>
+
+    <table id="main-dashboard-table">
+        <thead>
+            <tr>
+                <th>Изделие</th>
+                <th>Кол-во деталей</th>
+                <th>Общий прогресс (средний)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for product in products %}
+            <tr class="product-row" data-product-designation="{{ product.product_designation }}" data-safe-key="{{ to_safe_key(product.product_designation) }}">
+                <td class="product-toggle">{{ product.product_designation }} ▾</td>
+                <td>{{ product.total_parts }}</td>
+                <td>
+                    <!-- ИЗМЕНЕНИЕ: Теперь мы используем данные, рассчитанные в новом запросе -->
+                    {% set avg_progress = (product.total_completed_stages / product.total_possible_stages) * 100 if product.total_possible_stages > 0 else 0 %}
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {{ avg_progress }}%">{{ avg_progress|int }}%</div>
+                    </div>
+                </td>
+            </tr>
+            <tr class="details-row" id="details-for-{{ to_safe_key(product.product_designation) }}">
+                <td colspan="3" class="details-content-cell"><div class="details-placeholder"></div></td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3" style="text-align: center;">Данные отсутствуют. Добавьте детали через админ-панель.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- СКРИПТ ДЛЯ РАСКРЫТИЯ ДЕТАЛЕЙ ---
+        document.querySelectorAll('.product-toggle').forEach(toggleCell => {
+            toggleCell.addEventListener('click', async function() {
+                const productRow = this.closest('.product-row');
+                const productDesignation = productRow.dataset.productDesignation;
+                const safeKey = productRow.dataset.safeKey;
+                const detailsRow = document.getElementById(`details-for-${safeKey}`);
+                const contentCell = detailsRow.querySelector('.details-content-cell');
+                const isVisible = detailsRow.classList.contains('visible');
+
+                if (isVisible) {
+                    detailsRow.classList.remove('visible');
+                    this.innerHTML = `${productDesignation} ▾`;
+                } else {
+                    detailsRow.classList.add('visible');
+                    this.innerHTML = `${productDesignation} ▴`;
+                    if (!contentCell.dataset.loaded) {
+                        contentCell.innerHTML = '<div class="details-placeholder">Загрузка...</div>';
+                        try {
+                            const response = await fetch(`/api/parts/${encodeURIComponent(productDesignation)}`);
+                            const data = await response.json();
+                            const partsData = data.parts;
+                            const permissions = data.permissions;
+
+                            if (partsData.length === 0) {
+                                contentCell.innerHTML = '<div class="details-placeholder">Детали не найдены.</div>';
+                            } else {
+                                let tableHtml = '<table class="details-table"><thead><tr><th>Дата доб.</th><th>Деталь</th><th>Статус</th><th>Прогресс</th><th>Действия</th></tr></thead><tbody>';
+                                partsData.forEach(part => {
+                                    const total_stages_for_part = part.total_stages > 0 ? part.total_stages : 1;
+                                    const progress = (part.completed_stages / total_stages_for_part) * 100;
+                                    
+                                    const deleteButton = (permissions && permissions.can_delete) ? `<a href="/admin/delete/${part.part_id}" class="delete-link" title="Удалить">✖</a>` : '';
+                                    const editButton = (permissions && permissions.can_edit) ? `<a href="/admin/edit/${part.part_id}" class="edit-link" title="Редактировать">✎</a>` : '';
+                                    const regenerateQRButton = (permissions && permissions.can_generate_qr) ? `
+                                        <a href="/admin/generate_qr/${part.part_id}" class="qr-link" title="Скачать QR-код"></a>
+                                    ` : '';
+
+                                    tableHtml += `<tr>
+                                        <td>${part.creation_date}</td>
+                                        <td><a href="/history/${part.part_id}">${part.part_id}</a></td>
+                                        <td>${part.current_status}</td>
+                                        <td><div class="progress"><div class="progress-bar" style="width: ${progress}%"></div></div><small>${part.completed_stages} из ${part.total_stages}</small></td>
+                                        <td style="white-space: nowrap;">${deleteButton} ${editButton} ${regenerateQRButton}</td>
+                                    </tr>`;
+                                });
+                                tableHtml += '</tbody></table>';
+                                contentCell.innerHTML = tableHtml;
+                            }
+                            contentCell.dataset.loaded = 'true';
+                        } catch (error) {
+                            console.error('Ошибка загрузки деталей:', error);
+                            contentCell.innerHTML = '<div class="details-placeholder">Ошибка загрузки.</div>';
+                        }
+                    }
+                }
+            });
+        });
+
+        // --- СКРИПТ ДЛЯ ФИЛЬТРАЦИИ ТАБЛИЦЫ ---
+        const searchInput = document.getElementById('searchInput');
+        const productRows = document.getElementById('main-dashboard-table').querySelector('tbody').getElementsByClassName('product-row');
+
+        searchInput.addEventListener('keyup', function() {
+            const filter = searchInput.value.toUpperCase();
+            for (const row of productRows) {
+                const toggleCell = row.querySelector('.product-toggle');
+                if (toggleCell) {
+                    const txtValue = toggleCell.textContent || toggleCell.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

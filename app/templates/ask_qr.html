@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Создать QR-код?{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Подтверждение</h1>
+</div>
+<div class='container'>
+    <div class='card' style="max-width: 600px; margin: 2rem auto; text-align: center;">
+        <h2>Создать и скачать QR-код для детали <strong>{{ part_id }}</strong>?</h2>
+        <div style="display: flex; justify-content: space-around; margin-top: 1.5rem;">
+            
+            <!-- 
+                ИЗМЕНЕНИЕ: 
+                Раньше здесь была форма с POST-запросом.
+                Теперь это простая ссылка (GET-запрос), которая ведет на новый маршрут.
+            -->
+            <a href="{{ url_for('admin.generate_single_qr', part_id=part_id) }}" 
+               class="button confirm" 
+               style="flex-basis: 45%; text-align: center;">
+               Да, создать и скачать
+            </a>
+            
+            <a href="{{ url_for('main.dashboard') }}" 
+               class="button" 
+               style="flex-basis: 45%; text-align: center;">
+               Нет, вернуться на панель
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

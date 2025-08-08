@@ -1,0 +1,50 @@
+<!-- file: app/templates/audit_log.html -->
+{% extends "base.html" %}
+{% block title %}Журнал аудита{% endblock %}
+{% block content %}
+<div class="header"><h1>Общий журнал аудита</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('admin.admin_page') }}">← Назад в админ-панель</a></p>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Время</th>
+                    <th style="width: 15%;">Пользователь</th>
+                    <th style="width: 20%;">Действие</th>
+                    <th style="width: 15%;">ID Детали</th>
+                    <th style="width: 35%;">Детали</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs.items %}
+                <tr>
+                    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ log.user.username }}</td>
+                    <td><strong>{{ log.action }}</strong></td>
+                    <td>
+                        {% if log.part_id %}
+                            <a href="{{ url_for('main.history', part_id=log.part_id) }}">{{ log.part_id }}</a>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 0.9em; color: #333;">{{ log.details }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center;">Журнал пуст.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Пагинация -->
+    <div style="text-align: center; margin-top: 1rem;">
+        {% if logs.has_prev %}<a href="{{ url_for('admin.audit_log', page=logs.prev_num) }}" class="button">« Пред.</a>{% endif %}
+        Страница {{ logs.page }} из {{ logs.pages }}.
+        {% if logs.has_next %}<a href="{{ url_for('admin.audit_log', page=logs.next_num) }}" class="button">След. »</a>{% endif %}
+    </div>
+</div>
+{% endblock %}

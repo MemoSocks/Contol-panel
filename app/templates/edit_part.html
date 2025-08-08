@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Редактирование: {{ part.part_id }}{% endblock %}
+{% block content %}
+<div class="header"><h1>Редактирование детали</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('main.dashboard') }}">← Назад на панель</a></p>
+    <div class="card" style="max-width: 600px; margin: 2rem auto;">
+        <!-- ИЗМЕНЕНИЕ: Форма теперь использует WTForms -->
+        <form method="post" novalidate>
+            {{ form.hidden_tag() }} <!-- CSRF токен -->
+            <label>ID Детали (нельзя изменить)</label>
+            <input type="text" value="{{ part.part_id }}" readonly disabled style="background-color: #e9ecef;">
+            
+            {{ form.product_designation.label }}
+            {{ form.product_designation() }}
+             {% for error in form.product_designation.errors %}
+                <small style="color: red;">{{ error }}</small>
+            {% endfor %}
+
+            {{ form.submit(class="button confirm full-width") }}
+        </form>
+    </div>
+</div>
+{% endblock %}

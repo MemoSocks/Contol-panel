@@ -1,0 +1,22 @@
+<!-- file: app/templates/login.html -->
+{% extends "base.html" %}
+{% block title %}Вход в систему{% endblock %}
+{% block content %}
+<div class="header"><h1>Вход в систему</h1></div>
+<div class="container">
+    <div class="card" style="max-width: 500px; margin: 2rem auto;">
+      
+
+        <form method="post" action="{{ url_for('admin.login') }}" novalidate>
+            {{ form.hidden_tag() }}
+            {{ form.username.label }}
+            {{ form.username() }}
+            {% for error in form.username.errors %}<small style="color: red;">{{ error }}</small>{% endfor %}
+            {{ form.password.label }}
+            {{ form.password() }}
+            {% for error in form.password.errors %}<small style="color: red;">{{ error }}</small>{% endfor %}
+            {{ form.submit(class="button confirm full-width") }}
+        </form>
+    </div>
+</div>
+{% endblock %}

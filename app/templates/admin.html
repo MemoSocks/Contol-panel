@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Администрирование{% endblock %}
+
+{% block content %}
+<div class="header"><h1>Администрирование</h1></div>
+<div class="container">
+    <p><a href="{{ url_for('main.dashboard') }}">← Назад на панель</a></p>
+
+    {% if current_user.is_authenticated and current_user.can_view_audit_log %}
+    <div class="card">
+        <h2>Журнал действий</h2>
+        <p>Просмотр всех административных действий в системе.</p>
+        <a href="{{ url_for('admin.audit_log') }}" class="button">Перейти к журналу</a>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated and current_user.can_view_reports %}
+    <div class="card">
+        <h2>Отчеты и аналитика</h2>
+        <p>Просмотр статистики и анализ производственных данных.</p>
+        <a href="{{ url_for('admin.reports_index') }}" class="button">Перейти к отчетам</a>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated and current_user.can_manage_stages %}
+    <div class="card">
+        <h2>Справочник этапов</h2>
+        <p>Управление единым списком всех производственных этапов.</p>
+        <a href="{{ url_for('admin.list_stages') }}" class="button">Перейти к справочнику</a>
+    </div>
+    {% endif %}
+    
+    {% if current_user.is_authenticated and current_user.can_manage_routes %}
+    <div class="card">
+        <h2>Управление маршрутами</h2>
+        <p>Создание и редактирование технологических маршрутов.</p>
+        <a href="{{ url_for('admin.list_routes') }}" class="button">Перейти к маршрутам</a>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated and current_user.is_admin() %}
+    <div class="card">
+        <h2>Управление пользователями</h2>
+        <p>Добавление, редактирование и удаление учетных записей.</p>
+        <a href="{{ url_for('admin.list_users') }}" class="button">Перейти к пользователям</a>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated and current_user.can_add_parts %}
+    <div class='card'>
+        <h2>Добавить деталь вручную</h2>
+        {% if not part_form.route_template.choices %}
+            <div class="flash flash-error">
+                Сначала необходимо <a href="{{ url_for('admin.add_route') }}"><b>создать технологический маршрут</b></a>.
+            </div>
+        {% else %}
+            <form action="{{ url_for('admin.add_single_part') }}" method='post' novalidate>
+                {{ part_form.hidden_tag() }}
+                
+                {{ part_form.product.label }}
+                {{ part_form.product(class="form-control") }}
+                
+                {{ part_form.part_id.label }}
+                {{ part_form.part_id(class="form-control") }}
+
+                {{ part_form.route_template.label }}
+                {{ part_form.route_template() }}
+
+                {{ part_form.submit(class='button full-width') }}
+            </form>
+        {% endif %}
+    </div>
+    <div class='card'>
+        <h2>Массовый импорт из Excel</h2>
+        <p class="flash" style="background-color: #fff3cd; border-color: #ffeeba; color: #856404;">
+            Массовый импорт присвоит деталям маршрут, отмеченный "по умолчанию".
+        </p>
+        <form action="{{ url_for('admin.upload_excel') }}" method='post' enctype='multipart/form-data' novalidate>
+            {{ upload_form.hidden_tag() }}
+            <label>Загрузите Excel-файл (.xlsx, .xls) с колонками <b>"Артикул"</b> и <b>"Номенклатура"</b>.</label>
+            {{ upload_form.file(style="width: 100%; margin: 1rem 0; padding: 0.5rem;") }}
+            {{ upload_form.submit(class='button confirm full-width') }}
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

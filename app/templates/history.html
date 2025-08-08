@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}История: {{ part.part_id }}{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Полная история: {{ part.part_id }}</h1>
+    <h2 style="font-weight: normal; color: #ddd; font-size: 1.1rem; margin:0;">{{ part.product_designation }}</h2>
+</div>
+<div class="container">
+    <p><a href="{{ url_for('main.dashboard') }}">← Назад на панель</a></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Событие / Операция</th>
+                <th style="width: 45%;">Детали</th>
+                <th style="width: 15%;">Исполнитель</th>
+                <th style="width: 15%;">Время</th>
+            </tr>
+        </thead>
+        <tbody>
+        {# ИЗМЕНЕНИЕ: Цикл теперь проходит по объединенной истории #}
+        {% for entry in combined_history %}
+            
+            {# --- БЛОК ДЛЯ ОТОБРАЖЕНИЯ ЭТАПА ПРОИЗВОДСТВА --- #}
+            {% if entry.type == 'status' %}
+            <tr>
+                <td><strong>{{ entry.status }}</strong></td>
+                <td>
+                    {% if current_user.is_authenticated and current_user.can_edit_parts %}
+                    <form action="{{ url_for('admin.cancel_stage', history_id=entry.id) }}" method='post' onsubmit="return confirm('Вы уверены, что хотите отменить этап \'{{ entry.status }}\'? Это действие необратимо.');" style="float: right;">
+                        <button type='submit' class='button delete' style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Отменить</button>
+                    </form>
+                    {% endif %}
+                </td>
+                <td>{{ entry.operator_name }}</td>
+                <td>{{ entry.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+
+            {# --- БЛОК ДЛЯ ОТОБРАЖЕНИЯ ЗАПИСИ ИЗ ЖУРНАЛА АУДИТА --- #}
+            {% elif entry.type == 'audit' %}
+            <tr style="background-color: #f8f9fa;">
+                <td style="color: #6c757d;">⚙ {{ entry.action }}</td>
+                <td style="font-style: italic; color: #495057;">{{ entry.details }}</td>
+                <td>
+                    {# entry.user ссылается на модель User через backref #}
+                    {{ entry.user.username }}
+                </td>
+                <td>{{ entry.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+            {% endif %}
+
+        {% else %}
+            <tr>
+                <td colspan="4" style="text-align:center;">История пуста</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
